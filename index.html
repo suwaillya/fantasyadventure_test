@@ -5365,16 +5365,42 @@ getEnemySkillDesc(name) {
         if(GameState.phase !== 'merchant' && GameState.phase !== 'demon_merchant') document.getElementById('merchant-area').classList.add('hidden');
         if(GameState.phase !== 'crafting') document.getElementById('crafting-area').classList.add('hidden');
     },
-    setButtons(mainText, mainAction, subText, subAction, disableSub) {
-        const b1 = document.getElementById('btn-main');
-        const b2 = document.getElementById('btn-sub');
-        b1.innerText = mainText;
-        // [FIX] 確保在 action 存在時才設置 onclick
-        if (Game[mainAction]) b1.onclick = () => Game[mainAction](); else b1.onclick = null; 
-        b2.innerText = subText;
-        if (subAction && Game[subAction]) b2.onclick = () => Game[subAction](); else b2.onclick = null;
-        b2.disabled = disableSub;
-    },
+	setButtons(mainText, mainAction, subText, subAction, disableSub) {
+		const b1 = document.getElementById('btn-main');
+		const b2 = document.getElementById('btn-sub');
+
+		// 共用一個小工具：包住真正的動作，避免捲動
+		const wrapAction = (btn, actionName) => {
+			if (!Game[actionName]) return null;
+
+			return (ev) => {
+				// 記錄點擊前的捲動位置
+				const x = window.scrollX;
+				const y = window.scrollY;
+
+				// 阻止瀏覽器預設行為（包含部分自動捲動邏輯）
+				if (ev) ev.preventDefault();
+
+				// 先把按鈕的焦點拿掉，避免之後再觸發捲動
+				btn.blur();
+
+				// 執行原本的遊戲邏輯
+				Game[actionName]();
+
+				// 還原到點下去之前的位置
+				window.scrollTo(x, y);
+			};
+		};
+
+		// 主按鈕
+		b1.innerText = mainText;
+		b1.onclick = wrapAction(b1, mainAction);
+
+		// 副按鈕
+		b2.innerText = subText;
+		b2.onclick = subAction ? wrapAction(b2, subAction) : null;
+		b2.disabled = disableSub;
+	},
     updateUI() {
         this.updateStatsUI();
         
@@ -5586,4 +5612,5 @@ Game.init();
 </script>
 </body>
 </html>
+
 
