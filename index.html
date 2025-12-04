@@ -111,17 +111,37 @@
 
         .stat-item span { font-weight: bold; color: var(--accent-color); }
         
-        #buff-display {
-            grid-column: span 2;
-            border-top: 1px solid #444;
-            padding-top: 5px;
-            margin-top: 5px;
-            font-size: 0.85em;
-            color: #aaa;
-            cursor: help;
-            transition: 0.2s;
-        }
-        #buff-display:hover { background: #333; }
+		#buff-display {
+			grid-column: span 2;
+			border-top: 1px solid #444;
+			padding-top: 5px;
+			margin-top: 5px;
+			font-size: 0.85em;
+			color: #aaa;
+			cursor: help;
+			transition: 0.2s;
+
+			/* 讓狀態文字 + 勾選框同行排列 */
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 8px;
+		}
+		#buff-display:hover { background: #333; }
+
+		/* 勾選框那一側的樣式 */
+		.opt-auto-skip {
+			display: flex;
+			align-items: center;
+			gap: 4px;
+			font-size: 0.8em;
+			color: #aaa;
+			cursor: default;             /* 不要顯示「說明」的問號 */
+		}
+		.opt-auto-skip input {
+			cursor: pointer;
+		}
+
 
 		/* 外層：高度固定，負責置中 event-inner */
 		#event-display {
@@ -579,8 +599,21 @@ pointer-events: none;
         <div class="stat-item">攻擊: <span id="atk-val">30000000</span></div>
         <div class="stat-item">暴擊: <span id="crit-val">100</span>%</div> <div class="stat-item">金幣: <span id="gold-val">100</span></div>
         <div class="stat-item">深度: <span id="depth-val">0</span> 層</div>
-        <div id="buff-display" title="點擊查看詳細效果">狀態: 無</div>
+        <div id="buff-display" title="點擊查看詳細效果">
+        <span id="buff-text">狀態: 無</span>
+
+        <label class="opt-auto-skip" onclick="event.stopPropagation();">
+            <input 
+                type="checkbox" 
+                id="opt-auto-skip-statue" 
+                onchange="Game.toggleAutoSkipStatue(this.checked)"
+            >
+            自動略過「祈禱聖像」
+        </label>
+		</div>	
     </div>
+
+
 
     <div id="event-display">
 		<div id="event-inner">
@@ -1118,7 +1151,10 @@ debuff: null,
         lustActive: false, // 是否有媚氣環繞
         greedActive: false // 是否有黃金枷鎖
     },
-    succubusStage: 0 // [NEW] 0=初遇, 1=認識, 2=害羞, 3=完成
+    succubusStage: 0, // [NEW] 0=初遇, 1=認識, 2=害羞, 3=完成
+	
+	// [NEW] 自動略過祈禱聖像
+    autoSkipStatue: false
 };
 
 const GameState = {
@@ -1188,6 +1224,8 @@ const Game = {
             if(!Player.sinState) Player.sinState = { slothCount: 0, wrathRevive: 0, lustActive: false, greedActive: false };
             if (typeof Player.lilithBlessing === 'undefined') Player.lilithBlessing = false;
             if (typeof Player.lilithSacrificed === 'undefined') Player.lilithSacrificed = false;
+            if (typeof Player.autoSkipStatue === 'undefined') Player.autoSkipStatue = false;
+			
 
             Player.achievements = new Set(data.player.achievements);
             Player.history.items = new Set(data.player.history.items);
@@ -1230,6 +1268,20 @@ if (GameState.merchantRefreshed === undefined) GameState.merchantRefreshed = fal
             GameState.isLoading = false;
         }
     },
+
+	    
+    toggleAutoSkipStatue(on) {
+	// [NEW] 選項：切換自動略過祈禱聖像
+        Player.autoSkipStatue = !!on;
+        this.saveGame();  // 讓選項寫進存檔
+
+        // 小提示文字，可有可無
+        this.showFloatingText(
+            on ? "已開啟：自動略過祈禱聖像" : "已關閉：自動略過祈禱聖像",
+            "#cccccc"
+        );
+    },
+
 
     restoreScreenState() {
         if (GameState.phase === 'combat' && GameState.currentEnemy) {
@@ -4150,6 +4202,13 @@ if (Player.buff && Player.buff.id === 'demon_wealth') {
     },
     triggerStatue() {
         GameState.phase = "event_end";
+		// [NEW] 若已勾選自動略過，直接當作按「離開」
+        if (Player.autoSkipStatue) {
+            // 給個小提示（可視需要拿掉）
+            this.showFloatingText("略過祈禱聖像", "#888888");
+            this.nextEvent();   // 直接跳到下一個事件
+            return;
+        }
         this.triggerAnim('event-icon', 'anim-spawn');
         this.renderEvent("🗿 祈禱聖像", "你發現了一座古老的聖像...", "是否要進行祈禱？", "🙏");
         this.setButtons("祈禱", "pray", "離開", "nextEvent", false);
@@ -5432,6 +5491,11 @@ getEnemySkillDesc(name) {
         this.renderInvList('inv-consum', Player.inventory.consumable, 'consumable');
         this.renderInvList('inv-mat', Player.inventory.material, 'material');
 
+		// [NEW] 同步自動略過聖像的 checkbox
+        const chk = document.getElementById('opt-auto-skip-statue');
+        if (chk) chk.checked = !!Player.autoSkipStatue;
+
+
         if (!GameState.isLoading && Player.hp > 0 && Player.class) {
             this.saveGame();
         }
@@ -5447,6 +5511,7 @@ getEnemySkillDesc(name) {
         
         // --- 下面是原本的狀態顯示邏輯 (保持不變) ---
         const buffEl = document.getElementById('buff-display');
+		const buffTextEl = document.getElementById('buff-text');
         let statusHtml = "狀態: ";
         let hasStatus = false;
 
@@ -5497,7 +5562,7 @@ getEnemySkillDesc(name) {
 
         if (!hasStatus) statusHtml += "無";
         
-        buffEl.innerHTML = statusHtml;
+        if (buffTextEl) buffTextEl.innerHTML = statusHtml;
         
         // 點擊顯示詳細資訊
         buffEl.onclick = () => {
@@ -5612,5 +5677,4 @@ Game.init();
 </script>
 </body>
 </html>
-
 
