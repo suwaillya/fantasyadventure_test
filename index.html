@@ -1,9 +1,13 @@
 
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6004299811737792"
+
+     crossorigin="anonymous"></script>
     <title>幻想冒險v1.1.1 </title>
     <style>
         :root {
@@ -569,6 +573,9 @@ pointer-events: none;
     </div>
 </div>
 
+
+
+
 <div id="sell-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:310; flex-direction:column; align-items:center; justify-content:center;">
     <div style="background:#2d2d2d; padding:20px; border-radius:8px; width:80%; max-width:400px; text-align:center; border: 1px solid #ff9800; box-shadow: 0 0 20px rgba(255, 152, 0, 0.2);">
         <h3 style="color:#ff9800; margin-top:0;">💰 選擇要出售的分類</h3>
@@ -578,6 +585,29 @@ pointer-events: none;
             </div>
 
         <button onclick="document.getElementById('sell-modal').style.display='none'" style="margin-top:20px; background:#555; width:100%;">取消</button>
+    </div>
+</div>
+
+<div id="system-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:500; flex-direction:column; align-items:center; justify-content:center;">
+    <div style="background:#2d2d2d; padding:20px; border-radius:8px; width:90%; max-width:500px; border: 2px solid #009688; box-shadow: 0 0 30px rgba(0, 150, 136, 0.2);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #444; padding-bottom:10px;">
+            <h3 style="color:#009688; margin:0;">💾 存檔轉移</h3>
+            <button onclick="document.getElementById('system-modal').style.display='none'" style="background:#555; padding:5px 15px;">關閉</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:15px;">
+            <div style="background:#222; padding:10px; border-radius:4px;">
+                <h4 style="margin:0 0 5px 0; color:#b2dfdb;">📤 匯出存檔 (產生代碼)</h4>
+                <p style="font-size:0.8em; color:#888; margin:0 0 5px 0;">複製代碼並保存，可用於備份或轉移裝置。</p>
+                <textarea id="export-area" readonly style="width:100%; height:60px; background:#111; color:#00ffcc; border:1px solid #333; font-size:0.8em; resize:none; padding:5px; box-sizing:border-box;"></textarea>
+                <button onclick="Game.exportSave()" style="width:100%; margin-top:5px; background:#00796b;">📋 複製代碼</button>
+            </div>
+            <div style="background:#222; padding:10px; border-radius:4px;">
+                <h4 style="margin:0 0 5px 0; color:#ffccbc;">📥 匯入存檔 (讀取代碼)</h4>
+                <p style="font-size:0.8em; color:#888; margin:0 0 5px 0;">貼上代碼以覆蓋目前進度。</p>
+                <textarea id="import-area" placeholder="在此貼上存檔代碼..." style="width:100%; height:60px; background:#111; color:#fff; border:1px solid #333; font-size:0.8em; resize:none; padding:5px; box-sizing:border-box;"></textarea>
+                <button onclick="Game.importSave()" style="width:100%; margin-top:5px; background:#d84315;">⚠️ 讀取存檔 (覆蓋進度)</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -675,9 +705,10 @@ pointer-events: none;
             </div>
         </div>
 
-    <div style="margin-top: 20px; border-top: 1px solid #444; padding-top: 15px;">
-        <button onclick="Game.manualRestart()" style="width: 100%; background: #d32f2f; opacity: 0.8;">🔄 重新開始遊戲</button>
-    </div>
+    <div style="margin-top: 20px; border-top: 1px solid #444; padding-top: 15px; display:flex; flex-direction:column; gap:10px;">
+    <button onclick="Game.manualRestart()" style="width: 100%; background: #d32f2f; opacity: 0.8;">🔄 重新開始遊戲</button>
+    <button onclick="Game.openSystemModal()" style="width: 100%; background: #009688; color:white;">💾 存檔轉移 (匯出/匯入)</button>
+</div>
 </div>
 <script>
 const LILITH_HTML = `
@@ -716,7 +747,7 @@ const CONFIG = {
         { name: "鮮血伯爵", weight: 4, baseGold: 800, icon: "🧛", hp: 24000, atk: 1200, drop: "鮮血精華", tier: "boss" },
         { name: "巫妖王", weight: 4, baseGold: 900, icon: "💀", hp: 20000, atk: 1400, drop: "命匣碎片", tier: "boss" },
         { name: "深淵魔龍", weight: 2, baseGold: 2000, icon: "🐲", hp: 60000, atk: 2000, drop: "魔龍逆鱗", tier: "boss" },
-        { name: "舊日支配者", weight: 0.1, baseGold: 9999, icon: "🐙", hp: 99999, atk: 9999, drop: "不可名狀之物", tier: "boss", isOldOne: true }
+        { name: "舊日支配者", weight: 0.5, baseGold: 9999, icon: "🐙", hp: 99999, atk: 9999, drop: "不可名狀之物", tier: "boss", isOldOne: true }
     ],
     // 煉獄神話裝備
     infernoItems: [
@@ -1845,31 +1876,44 @@ triggerCombatWithEnemy(enemyData, canFlee) {
         this.setButtons("戰鬥", "combatRound", "逃跑", "flee", forceNoFlee);
 
         // 懶惰詛咒邏輯
-        if (Player.debuff && Player.debuff.id === 'sloth_curse') {
-            const btnMain = document.getElementById('btn-main'); 
-            const btnSub = document.getElementById('btn-sub');   
-            btnMain.disabled = true;
-            btnMain.innerText = "💤 懶惰 (無法攻擊)";
-            btnMain.style.opacity = "0.6";
-            btnMain.style.cursor = "not-allowed";
-            btnSub.disabled = false;
-            btnSub.innerText = "逃跑";
-        } else {
-            document.getElementById('btn-main').disabled = false;
-            document.getElementById('btn-main').style.opacity = "1";
-            document.getElementById('btn-main').style.cursor = "pointer";
-        }
+        if (Player.debuff && Player.debuff.id === 'sloth_curse' && Player.ghostTurns === 0) {
+    const btnMain = document.getElementById('btn-main'); 
+    const btnSub = document.getElementById('btn-sub');   
+    btnMain.disabled = true;
+    btnMain.innerText = "💤 懶惰 (無法攻擊)";
+    btnMain.style.opacity = "0.6";
+    btnMain.style.cursor = "not-allowed";
+    btnSub.disabled = false;
+    btnSub.innerText = "逃跑";
+} else {
+    // 正常情況或是靈魂型態下，開啟攻擊按鈕
+    document.getElementById('btn-main').disabled = false;
+    document.getElementById('btn-main').style.opacity = "1";
+    document.getElementById('btn-main').style.cursor = "pointer";
+}
     },
 
 checkSinCollection() {
-        // 將 w_wrath 改為 acc_wrath
-        const required = ['acc_pride', 'acc_envy', 'acc_wrath', 'acc_sloth', 'acc_greed', 'acc_gluttony', 'acc_lust'];
-        const hasAll = required.every(id => {
-            const itemDef = CONFIG.sinItems.find(i => i.id === id);
-            // 這裡需要用 itemDef.name 來檢查歷史紀錄
-            return Player.history.items.has(itemDef.name);
-        });
-        if (hasAll && !Player.history.items.has("原罪之冠")) {
+        // [FIX] 修正：改為檢查「當前持有」的飾品，而不是「歷史紀錄」
+        // 定義七宗罪飾品的名稱
+        const requiredNames = ['傲慢之眼', '嫉妒魔盒', '暴怒指虎', '眠戒', '金色聖像', '暴食之牙', '魅魔香水'];
+        
+        // 1. 收集當前身上所有的飾品 (包含背包內 + 已裝備的)
+        const currentHoldings = [
+            ...Player.inventory.accessory, 
+            ...Player.equipment.accessories.filter(a => a !== null)
+        ];
+
+        // 2. 檢查是否集齊
+        const hasAll = requiredNames.every(name => 
+            currentHoldings.some(item => item.name === name)
+        );
+
+        // 3. 檢查當前背包是否已經有原罪之冠 (避免重複給予)
+        const hasCrown = Player.inventory.material.some(i => i.name === "原罪之冠");
+
+        // 觸發條件：集齊 7 樣且身上目前沒有王冠
+        if (hasAll && !hasCrown) {
             const crown = CONFIG.sinItems.find(i => i.id === 'm_crown_sin');
             this.addItemToInventory({...crown});
             this.checkAchievements(); // 檢查罪惡之人成就
@@ -2844,17 +2888,27 @@ combatRound() {
         
         // 1. 🌋 熔岩魔像 - 過熱光環
         if (enemy.name.includes("熔岩魔像")) {
-            const burn = Math.floor(Player.maxHp * 0.05);
-            Player.hp -= burn;
-            logHtml += `<span style='color:orange'>🌋 【過熱光環】 空氣灼燒著你的肺部！(HP -${burn})</span><br>`;
+            // ▼▼▼ 修改開始：靈魂型態免疫高溫 ▼▼▼
+            if (Player.ghostTurns > 0) {
+                logHtml += `<span style='color:#ccc'>👻 【靈魂型態】 靈魂免疫了物理高溫！(未受傷)</span><br>`;
+            } else {
+                const burn = Math.floor(Player.maxHp * 0.05);
+                Player.hp -= burn;
+                logHtml += `<span style='color:orange'>🌋 【過熱光環】 空氣灼燒著你的肺部！(HP -${burn})</span><br>`;
+            }
         }
 
-        // 2. 🐙 舊日支配者 - 不可名狀的低語 (堆疊真實傷害)
         if (enemy.isOldOne) {
             enemy.rageStack = (enemy.rageStack || 0) + 1;
-            const madnessDmg = 50 * enemy.rageStack;
-            Player.hp -= madnessDmg;
-            logHtml += `<span style='color:purple'>🐙 【精神崩壞】 腦海中的低語越來越大聲... (HP -${madnessDmg})</span><br>`;
+            
+            // ▼▼▼ 修改開始：靈魂型態免疫精神傷害 ▼▼▼
+            if (Player.ghostTurns > 0) {
+                 logHtml += `<span style='color:#ccc'>👻 【靈魂型態】 靈魂免疫了精神崩壞！</span><br>`;
+            } else {
+                const madnessDmg = 50 * enemy.rageStack;
+                Player.hp -= madnessDmg;
+                logHtml += `<span style='color:purple'>🐙 【精神崩壞】 腦海中的低語越來越大聲... (HP -${madnessDmg})</span><br>`;
+            }
         }
 
         // 3. 👁️ 審判之眼 (神之代行者)
@@ -2907,12 +2961,12 @@ combatRound() {
         // --- 玩家攻擊階段 ---
         
         let skipPlayerTurn = false;
-        if (Player.debuff && Player.debuff.id === 'sloth_curse' && enemy.hp === enemy.maxHp) { 
-            skipPlayerTurn = true;
-            logHtml += "<span style='color:grey'>💤 因懶惰而無法行動...</span><br>";
-        }
+        if (Player.debuff && Player.debuff.id === 'sloth_curse' && enemy.hp === enemy.maxHp && Player.ghostTurns === 0) { 
+    skipPlayerTurn = true;
+    logHtml += "<span style='color:grey'>💤 因懶惰而無法行動...</span><br>";
+}
 
-        if (!skipPlayerTurn) {
+if (!skipPlayerTurn) {
             // [飾品效果區塊省略，保持原樣...]
             if (Player.equipment.accessories.some(a => a && a.id === 'acc_envy') && Math.random() < 0.10) {
                  Player.hp = Player.maxHp;
@@ -3090,6 +3144,18 @@ if (Player.equipment.weapon && Player.equipment.weapon.id === 'w_soulreaver') {
                         Player.hp = Math.min(Player.maxHp, Player.hp + heal);
                         // 顯示綠色回復文字
                         logHtml += `<span style='color:#69f0ae'>☠️ 噬魂鐮刀：吸取 ${heal} HP</span><br>`;
+                    }
+                }
+
+
+// [FIX] 修復末世之鎧效果
+                if (Player.equipment.armor && Player.equipment.armor.id === 'a_apocalypse') {
+                    if (Math.random() < 0.01) { // 1% 機率
+                        Player.baseMaxHp += 100;
+                        Player.maxHp += 100;
+                        Player.hp += 100; 
+                        logHtml += `<span style='color:#ff0000; font-weight:bold;'>🛡️ 【末世之鎧】吞噬生命！永久 HP +100</span><br>`;
+                        this.showFloatingText("HP上限 +100", "#ff0000");
                     }
                 }
 
@@ -3423,6 +3489,44 @@ openPortableCrafting(mode = 'normal') {
         modal.style.display = 'flex';
         this.renderPortableCrafting();
     },
+
+openSystemModal() {
+        document.getElementById('system-modal').style.display = 'flex';
+        document.getElementById('export-area').value = "";
+        document.getElementById('import-area').value = "";
+    },
+
+    exportSave() {
+        const saveData = localStorage.getItem('fantasy_adventure_save_v2');
+        if (!saveData) { alert("目前沒有存檔可匯出！"); return; }
+        try {
+            const code = btoa(unescape(encodeURIComponent(saveData)));
+            const textArea = document.getElementById('export-area');
+            textArea.value = code;
+            textArea.select();
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(code).then(() => alert("✅ 存檔代碼已複製！")).catch(() => alert("代碼已生成，請手動複製。"));
+            } else {
+                document.execCommand('copy');
+                alert("✅ 存檔代碼已複製！");
+            }
+        } catch (e) { console.error(e); alert("匯出失敗"); }
+    },
+
+    importSave() {
+        const code = document.getElementById('import-area').value.trim();
+        if (!code) { alert("請先貼上代碼！"); return; }
+        if (!confirm("⚠️ 警告：這將會覆蓋你目前的進度，確定嗎？")) return;
+        try {
+            const jsonString = decodeURIComponent(escape(atob(code)));
+            const data = JSON.parse(jsonString);
+            if (!data.player) throw new Error("無效的存檔");
+            localStorage.setItem('fantasy_adventure_save_v2', jsonString);
+            alert("✅ 讀取成功！遊戲將重新啟動。");
+            location.reload();
+        } catch (e) { alert("❌ 代碼無效，請確認是否複製完整。"); }
+    },
+
 
     // [修改] 渲染列表 (根據模式顯示不同清單)
     renderPortableCrafting() {
@@ -3917,19 +4021,23 @@ if (isGodKill) {
         }
 
 else {
-            // --- [FIX] 這裡是補上的：表層世界掉落邏輯 ---
-            let dName = "";
-            // 根據階級決定掉落物 (這些屬性在 CONFIG.monsters 都有定義)
-            if (enemy.tier === 'boss') dName = enemy.bossDrop;
-            else if (enemy.tier === 'elite') dName = enemy.eliteDrop;
-            else dName = enemy.drop;
+            // --- [MODIFIED] 表層世界掉落邏輯：改為階級向下兼容 (同時掉落弱版物品) ---
+            
+            // 1. 所有怪物：必定掉落基礎物品 (drop)
+            if (enemy.drop && CONFIG.lootData[enemy.drop]) {
+                drops.push({ ...CONFIG.lootData[enemy.drop], name: enemy.drop, type: "loot" });
+            }
 
-            // 確保該物品存在於 lootData 中
-            if (dName && CONFIG.lootData[dName]) {
-                drops.push({ ...CONFIG.lootData[dName], name: dName, type: "loot" });
+            // 2. 菁英以上 (elite 或 boss)：額外掉落菁英物品 (eliteDrop)
+            if ((enemy.tier === 'elite' || enemy.tier === 'boss') && enemy.eliteDrop && CONFIG.lootData[enemy.eliteDrop]) {
+                drops.push({ ...CONFIG.lootData[enemy.eliteDrop], name: enemy.eliteDrop, type: "loot" });
+            }
+
+            // 3. 只有首領 (boss)：額外掉落首領物品 (bossDrop)
+            if (enemy.tier === 'boss' && enemy.bossDrop && CONFIG.lootData[enemy.bossDrop]) {
+                drops.push({ ...CONFIG.lootData[enemy.bossDrop], name: enemy.bossDrop, type: "loot" });
             }
         }
-
 
         if (Math.random() < 0.1) {
             drops.push(this.generateRandomItem(enemy.tier));
@@ -4498,34 +4606,85 @@ const protectedNames = ['彈弓', '鉤子', '充滿魔力的巧克力', '紙條'
         this.showFloatingText("+ " + total + " G", "yellow");
         this.updateUI();
     },
-    sellItem(index, category) {
-        // [FIX] 修正：先取得 item 物件，才能進行檢查
-        const item = Player.inventory[category][index];
-        if (!item) return;
+	sellItem(index, category) {
+		const item = Player.inventory[category][index];
+		if (!item) return;
 
-        // [MODIFIED] 加入保護 (現在 item 已定義，可以檢查了)
-        if (this.isProtectedItem(item)) {
-            alert("這件物品無法出售！");
-            return;
-        }
-        
-        if (GameState.phase !== "merchant" && GameState.phase !== "demon_merchant") return; 
-        
-        let price = item.price || 0;
-        if (['weapon', 'armor', 'shield', 'consumable'].includes(item.type)) {
-            price = Math.floor(price * 0.8);
-        }
-        if (Player.class === 'merchant') {
-            price = Math.floor(price * 1.2);
-        }
-        
-        if(confirm(`確定要以 ${price} G 出售 ${item.name} 嗎？`)) {
-            Player.inventory[category].splice(index, 1);
-            Player.gold += price;
-            this.showFloatingText("+ " + price + " G", "yellow");
-            this.updateUI();
-        }
-    },
+		// 受保護物品不能出售
+		if (this.isProtectedItem(item)) {
+			alert("這件物品無法出售！");
+			return;
+		}
+
+		if (GameState.phase !== "merchant" && GameState.phase !== "demon_merchant") return;
+
+		const getPrice = (it) => {
+			let p = it.price || 0;
+			if (['weapon', 'armor', 'shield', 'consumable'].includes(it.type)) {
+				p = Math.floor(p * 0.8);
+			}
+			if (Player.class === 'merchant') {
+				p = Math.floor(p * 1.2);
+			}
+			return p;
+		};
+
+		const singlePrice = getPrice(item);
+
+		// 第一步：是否確定出售？
+		if (!confirm(`確定要以 ${singlePrice} G 出售 ${item.name} 嗎？`)) {
+			return;
+		}
+
+		// 第二步：是否出售所有同名物品？
+		// 計算相同物品的數量與總價值
+		const itemsInCategory = Player.inventory[category];
+		const sameItems = itemsInCategory.filter(i => i.name === item.name);
+
+		let totalValue = 0;
+		for (let each of sameItems) {
+			totalValue += getPrice(each);
+		}
+
+		const sellAll = confirm(
+			`是否要出售所有「${item.name}」？\n` +
+			`數量：${sameItems.length}\n` +
+			`總價值：${totalValue} G`
+		);
+
+
+		if (sellAll) {
+			// 找出該分類中所有同名物品
+			const items = Player.inventory[category];
+			const sameItems = items.filter(i => i.name === item.name);
+			const count = sameItems.length;
+
+			// 計算總金額
+			let totalGold = 0;
+			for (let each of sameItems) {
+				totalGold += getPrice(each);
+			}
+
+			// 移除所有同名物品
+			Player.inventory[category] = items.filter(i => i.name !== item.name);
+
+			// 玩家拿到錢
+			Player.gold += totalGold;
+
+			this.showFloatingText(`+ ${totalGold} G`, "yellow");
+			alert(`已出售 ${count} 個 ${item.name}，共獲得 ${totalGold} G！`);
+
+		} else {
+			// 僅出售單一物品（原本邏輯）
+			Player.inventory[category].splice(index, 1);
+			Player.gold += singlePrice;
+
+			this.showFloatingText(`+ ${singlePrice} G`, "yellow");
+		}
+
+		this.updateUI();
+	},
+
 
     triggerChest() {
         GameState.phase = "event_end";
@@ -4796,7 +4955,7 @@ if (Player.debuff && Player.debuff.id === 'sloth_curse') {
     },
 
 checkDeath(reason) {
-const hasNecklace = Player.equipment.accessories.some(a => a && a.id === 'acc_dead');
+        const hasNecklace = Player.equipment.accessories.some(a => a && a.id === 'acc_dead');
         
         // 1. 【優先觸發】亡者項鍊
         // 只要有項鍊且還沒變鬼，就先變身 (最優先)
@@ -4809,14 +4968,12 @@ const hasNecklace = Player.equipment.accessories.some(a => a && a.id === 'acc_de
             return; // 這裡 return，因為已經變身了
         }
 
-        // 2. 【修改這裡】靈魂型態倒數
+        // 2. 靈魂型態倒數
         if (Player.ghostTurns > 0) {
             Player.ghostTurns--;
             if (Player.ghostTurns <= 0) {
-                // --- [FIX] 修改重點：靈魂消散後，不直接處死，而是「不 return」往下走 ---
                 this.showFloatingText("靈魂型態結束...", "gray");
-                // 讓程式繼續往下執行，去檢查有沒有羽毛或莉莉絲
-                // (注意：這裡移除原本的 this.playerDie 和 return)
+                // 讓程式繼續往下執行
             } else {
                 // 如果還有回合數，鎖血並 return
                 Player.hp = 1;
@@ -4826,6 +4983,7 @@ const hasNecklace = Player.equipment.accessories.some(a => a && a.id === 'acc_de
                 return; 
             }
         }        
+        
         // [NEW] 永生護符 (復活)
         const hasPhylactery = Player.equipment.accessories.some(a => a && a.id === 'acc_phylactery');
         if (hasPhylactery && Player.hp <= 0 && Player.souls >= 50) {
@@ -4838,51 +4996,57 @@ const hasNecklace = Player.equipment.accessories.some(a => a && a.id === 'acc_de
         }
 
         // 不死鳥羽毛邏輯
-    const featherIdx = Player.inventory.material.findIndex(i => i.id === 'phoenix_feather');
-    if (featherIdx !== -1) {
-        Player.inventory.material.splice(featherIdx, 1);
-        Player.hp = Math.floor(Player.maxHp * 0.5);
-        
-        this.renderEvent("🔥 浴火重生", "不死鳥的羽毛燃燒殆盡...", "你復活了並恢復 50% HP。<br>請重整態勢，準備繼續戰鬥。", "🦅");
-        
-        // 🔴 [修改重點] 這裡加入 && GameState.phase === 'combat' 的判斷
-        // 只有當「有敵人資料」且「當前處於戰鬥狀態」時，才允許 "resumeCombat"
-        if (GameState.currentEnemy && GameState.phase === 'combat') {
-            this.setButtons("重整態勢 (繼續)", "resumeCombat", "無", null, true);
-        } else {
-            // 如果是陷阱死亡 (phase 為 event_end)，則顯示倖存並前往下一個事件
-            this.setButtons("倖存 (繼續)", "nextEvent", "無", null, true);
-        }
-        
-        this.updateUI();
-        return;
-    }
+        const featherIdx = Player.inventory.material.findIndex(i => i.id === 'phoenix_feather');
+        if (featherIdx !== -1) {
+            Player.inventory.material.splice(featherIdx, 1);
+            Player.hp = Math.floor(Player.maxHp * 0.5);
+            
+            this.renderEvent("🔥 浴火重生", "不死鳥的羽毛燃燒殆盡...", "你復活了並恢復 50% HP。<br>請重整態勢，準備繼續戰鬥。", "🦅");
+            
+            // --- [FIX] 修復懶惰詛咒卡死問題 START ---
+            // 這裡強制把按鈕解鎖，否則如果是在懶惰詛咒下死亡，按鈕會是 disabled 狀態無法點擊
+            const btnMain = document.getElementById('btn-main');
+            if (btnMain) {
+                btnMain.disabled = false;
+                btnMain.style.opacity = "1";
+                btnMain.style.cursor = "pointer";
+            }
+            // --- [FIX] 修復懶惰詛咒卡死問題 END ---
 
-// --- [FIX] 莉莉絲獻祭事件 ---
+            // 只有當「有敵人資料」且「當前處於戰鬥狀態」時，才允許 "resumeCombat"
+            if (GameState.currentEnemy && GameState.phase === 'combat') {
+                this.setButtons("重整態勢 (繼續)", "resumeCombat", "無", null, true);
+            } else {
+                // 如果是陷阱死亡 (phase 為 event_end)，則顯示倖存並前往下一個事件
+                this.setButtons("倖存 (繼續)", "nextEvent", "無", null, true);
+            }
+            
+            this.updateUI();
+            return;
+        }
+
+        // 莉莉絲獻祭事件
         // 條件：打神 + 莉莉絲在場 + 莉莉絲還沒犧牲
         if (GameState.currentEnemy && GameState.currentEnemy.isGod && Player.lilithBlessing && !Player.lilithSacrificed) {
             
-            // 1. 標記犧牲 (永久防止再次觸發)
+            // 1. 標記犧牲
             Player.lilithSacrificed = true;
-            
-            // 2. 移除祝福狀態 (讓莉莉絲在 UI 上消失，但她的數值加成會保留到下一輪 recalc)
+            // 2. 移除祝福狀態
             Player.lilithBlessing = false; 
-
             // 3. 數值變更
             Player.lastInspirationTurns = 3; 
-            // Player.maxHp += 6666; // 這裡不需要加，因為會在 recalcStats() 中處理 (如果沒有其他配件，MaxHP會下降)
             Player.hp = Player.maxHp;        
             
             // 4. 削弱神
             const dmgToGod = Math.floor(GameState.currentEnemy.hp * 0.5);
             GameState.currentEnemy.hp -= dmgToGod;
-            // 5. 覆蓋七宗罪 DEBUFF (如果有的話)
+            
+            // 5. 覆蓋七宗罪 DEBUFF
             if (Player.debuff) {
                 Player.debuff = null;
                 this.showFloatingText("詛咒淨化", "#fff");
             }
             
-            // 重新計算 stats 以套用 MaxHP +6666
             this.recalcStats();
 
             // 6. 演出
@@ -4893,7 +5057,6 @@ const hasNecklace = Player.equipment.accessories.some(a => a && a.id === 'acc_de
                 神之代行者受到重創 (HP -50%)</span>`, 
                 "✨");
             
-            // [NEW] 檢查真誠成就
             this.checkAchievements();
             
             this.setButtons("帶著她的份戰鬥 (繼續)", "resumeCombat", "無", null, true);
@@ -5675,8 +5838,11 @@ getEnemySkillDesc(name) {
 
 Game.init();
 </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"version":"2024.11.0","token":"fd30e0d6d95b4a8085f67b673d27ef86","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
+
+
 
 
 
